@@ -1,0 +1,166 @@
+// Stepped Sinewave:
+
+void display_signal_stepped_sine(void) {
+    for(int i = 0; i < 10; i++) {
+//        PORTC = 0x7F; //segment c
+//        IO_RA0_SetLow();
+//        IO_RA1_SetHigh();
+//        IO_RB4_SetHigh();
+//        __delay_ms(53);
+//        
+//       
+//        PORTC = 0xFE; //f
+//        IO_RA0_SetHigh();
+//        IO_RA1_SetLow();
+//        IO_RB4_SetHigh();
+//        __delay_ms(53);
+//        
+//        PORTC = 0xFD; //g
+//        __delay_ms(53);
+//        
+//        PORTC = 0x7F; //c
+//        __delay_ms(53);
+//        
+//        
+//        PORTC = 0xFB; //e
+//        IO_RA0_SetHigh();
+//        IO_RA1_SetHigh();
+//        IO_RB4_SetLow();
+//        __delay_ms(53);
+//        
+//        PORTC = 0xFD; //g
+//        __delay_ms(53);
+//        
+//        PORTC = 0xEF; //b
+//        __delay_ms(53);
+        
+        //cdab(DP)egf
+        PORTC = 0x4A; 
+        IO_RA0_SetHigh();
+        IO_RA1_SetLow();
+        IO_RB4_SetHigh();
+        __delay_ms(50);
+        
+        PORTC = 0x2A; 
+        IO_RA0_SetHigh();
+        IO_RA1_SetHigh();
+        IO_RB4_SetLow();
+        __delay_ms(50);
+        
+        PORTC = 0xff;  
+        __delay_ms(950);
+    }
+    PORTC = 0xff;
+}
+
+
+
+// Squarewave:
+
+void display_signal_squarewave(void) {
+    for(int i = 0; i < 10; i++) { //run thru 10 times
+        for (int i = 3; i <= 4; i++) {
+            PORTC = display_pulse(i);
+            IO_RA0_SetLow();
+            IO_RA1_SetHigh();
+            IO_RB4_SetHigh();
+            __delay_ms(95);
+        }
+        for (int i = 0; i <= 4; i++) {
+            PORTC = display_pulse(i);
+            IO_RA0_SetHigh();
+            IO_RA1_SetLow();
+            IO_RB4_SetHigh();
+            __delay_ms(95);
+        }
+        for (int i = 0; i <= 4; i++) {
+            PORTC = display_pulse(i);
+            IO_RA0_SetHigh();
+            IO_RA1_SetHigh();
+            IO_RB4_SetLow();
+            __delay_ms(95);
+        }
+        __delay_ms(336);
+        PORTC = 0xff;
+        
+    }
+}
+
+
+// Squarewave v2:
+
+// Constants for the new signal:
+const float pulse_rate = 60;
+const float rep_rate = (((1/(pulse_rate/60))*1000)/10);
+
+void new_signal(void) {
+    //leftmost digit
+    for (int i = 0; i <= 10; i++) {
+        for (int i = 3; i <= 4; i++) {
+            PORTC = display_pulse(i);
+            IO_RA0_SetLow();
+            IO_RA1_SetHigh();
+            IO_RB4_SetHigh();
+            __delay_ms(rep_rate);
+        }
+        
+        //middle digit
+        for (int i = 0; i <= 4; i++) {
+            PORTC = display_pulse(i);
+            IO_RA0_SetHigh();
+            IO_RA1_SetLow();
+            IO_RB4_SetHigh();
+            __delay_ms(rep_rate);
+        }
+
+        //rightmost digit
+        PORTC = display_pulse(0xBF);
+        IO_RA0_SetHigh();
+        IO_RA1_SetHigh();
+        IO_RB4_SetLow();
+        __delay_ms(rep_rate);
+
+        PORTC = display_pulse(0x7F);
+        IO_RA0_SetHigh();
+        IO_RA1_SetHigh();
+        IO_RB4_SetLow();
+        __delay_ms(rep_rate);
+
+        PORTC = display_pulse(0xEF);
+        IO_RA0_SetHigh();
+        IO_RA1_SetHigh();
+        IO_RB4_SetLow();
+        __delay_ms(rep_rate);
+
+        PORTC = 0xff;
+    }
+}
+
+
+
+// Constants for a linear, constant (non-scaled) pulse:
+
+const float rep_rate_lp = (300/9);
+const float delay_lp = ((1/(pulse_rate/60))*1000) - 300;
+
+
+
+
+// Display pulse function for the above signals:
+
+/*
+ * Individual segments to be flashed on the monitor display.
+ */
+unsigned short display_pulse(unsigned short segment) {
+    switch(segment) {
+        case 0: return 0xFB; //e = 1111 1011
+        case 1: return 0xFE; //f = 1111 1110 
+        case 2: return 0xDF; //a = 1101 1111 
+        case 3: return 0xEF; //b = 1110 1111
+        case 4: return 0x7F; //c = 0111 1111
+        default: return 0x0;
+        //g = 1111 1101 = 0xFD
+        //d = 1011 1111 = 0xBF
+    }
+}
+
