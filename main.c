@@ -1,14 +1,16 @@
 /**
-  Generated Main Source File
+  Main Source File
 
   Company:
-    Microchip Technology Inc.
+    Sanders RF Consulting LLC
 
   File Name:
     main.c
 
   Summary:
-    This is the main file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+    This is the main project file generated using the PIC18F14K22 MCU. This file
+    handles the display of a patient's heart rate, Sp02, and cardiac pulse/waveforms 
+    on the seven segment display hardware.
 
   Description:
     This header file provides implementations for driver APIs for all modules selected in the GUI.
@@ -32,7 +34,7 @@ int state;
 int state_change;
 
 /*
- * Numbers to be shown on the monitor display.
+ * Digits to be shown on the monitor display.
  * PortC bits correspond to lettered display segments in the order: cdab(DP)egf.
  */
 unsigned short display_digit(unsigned short digit) {
@@ -107,10 +109,17 @@ void display_sp02(void) {
     PORTC = 0xff;
 }
 
+/*
+ * Handles button press state change and timer flags.
+ */
 void __interrupt(high_priority) button_push() {
     if (INTCON3bits.INT2IF == 1) {
         INTCON3bits.INT2IF = 0;
         state_change = 1;
+    }
+    if (PIR1bits.TMR1IF == 1) {
+        PIR1bits.TMR1IF = 0;
+        TMR1 = 0xF856;
     }
 }
 
@@ -231,10 +240,6 @@ void main(void) {
     INTCON3bits.INT2IF = 0; // Set flag to zero (external interrupt did not occur)
     INTCONbits.GIE = 1; // Enable global interrupts
     
-    // Timer Setup 
-    INTCONbits.PEIE = 1; // Enable peripheral interrupts
-    T0CONbits.T08BIT = 1; // Configured as 8-bit timer
-    
 
     // Main Program -- Polling Solution
 //    int cycle;
@@ -262,12 +267,17 @@ void main(void) {
 //}
 
     // Main Program -- Interrupt Solution
-    // PROBLEM--HOW TO HANDLE IF BUTTON PRESS OCCURS WHILE DISPLAY HAPPENS?
     while(1) {
         if (state_change) {
             state++;
-            // while the timer is running..increment the state
             state_change = 0;
+            for (int i = 0; i <= 14; i++) {
+                __delay_ms(50);
+                if (state_change) {
+                    state++;
+                    state_change = 0;
+                } 
+            }            
         } else {
             switch(state) {
                 case 0: break; // Do nothing
